@@ -2,8 +2,8 @@
 
 (require racket/function)
 (require racket/list)
+(require racket/match)
 (require racket/sequence)
-(require racket/string)
 (require threading)
 
 ;; Data structures
@@ -11,32 +11,39 @@
 
 ;; Read the stacks section into a list of stacks.
 (define (input->stacks filename)
-  (define input-lines (take (sequence->list (in-lines (open-input-file filename))) 8))
-  (define input-letters
-    (map (λ (x) (~> x (string-replace "[" "") (string-replace "]" "") (string-replace "  " " ")))
-         input-lines))
-  (for*/fold ([acc (build-list 9 (λ (_) '()))]) ([letters (reverse input-letters)] [i (range 9)])
-    (let ([c (string-ref letters (* 2 i))])
-      (if (not (eq? c #\space)) (list-set acc i (cons c (list-ref acc i))) acc))))
+  (define input-lines
+    (take (sequence->list (in-lines (open-input-file filename))) 8))
+  (define input-stacks (/ (+ (string-length (car input-lines)) 1) 4))
+  (for*/fold ([acc (make-list input-stacks '())])
+             ([letters (reverse input-lines)] [i (range input-stacks)])
+    (let ([c (string-ref letters (+ 1 (* 4 i)))])
+      (if (not (eq? c #\space))
+          (list-set acc i (cons c (list-ref acc i)))
+          acc))))
 
 ;; Read the instructions section into a list of moves.
 (define (input->moves filename)
   (define (line->move line)
-    (define match (regexp-match #px"move (\\d+) from (\\d) to (\\d)" line))
-    (define match-numbers (map string->number (drop match 1)))
-    (apply move match-numbers))
-  (define input-lines (drop (sequence->list (in-lines (open-input-file filename))) 10))
+    (define match (regexp-match #px"move (\\d+) from (\\d+) to (\\d+)" line))
+    (match-define (list n from to) (map string->number (drop match 1)))
+    (move n (sub1 from) (sub1 to)))
+  (define input-lines
+    (drop (sequence->list (in-lines (open-input-file filename))) 10))
   (map line->move input-lines))
 
 ;; Apply a move to a list of stacks.
-(define (with-move move stacks [reversed #t])
-  (define to-move (take (list-ref stacks (sub1 (move-from move))) (move-n move)))
-  (~> stacks
-      (list-update (sub1 (move-to move)) (λ (v) (append (if reversed (reverse to-move) to-move) v)))
-      (list-update (sub1 (move-from move)) (λ (v) (drop v (move-n move))))))
+(define (with-move m stacks [reversed #t])
+  (match-define (move n from to) m)
+  (define to-move (take (list-ref stacks from) n))
+  (~>
+   stacks
+   (list-update to (λ (v) (append (if reversed (reverse to-move) to-move) v)))
+   (list-update from (λ (v) (drop v n)))))
 
 ;; Read the input.
 (define stacks (input->stacks "data/input.txt"))
 (define moves (input->moves "data/input.txt"))
-(printf "Solution one: ~a\n" (list->string (map car (foldl with-move stacks moves))))
-(printf "Solution two: ~a\n" (list->string (map car (foldl (curryr with-move #f) stacks moves))))
+(printf "Solution one: ~a\n"
+        (list->string (map car (foldl with-move stacks moves))))
+(printf "Solution two: ~a\n"
+        (list->string (map car (foldl (curryr with-move #f) stacks moves))))
