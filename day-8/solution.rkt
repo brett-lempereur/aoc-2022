@@ -10,19 +10,20 @@
 
 ;; Compute visibility for the entire grid.
 (define (update-visibility! grid)
-  (define (mark-visible! line dir)
+  (define (mark-visible! line)
     (let loop ([trees line] [prev null] [tallest -1])
       (when (not (empty? trees))
         (let* ([head (car trees)] [head-height (tree-height head)] [tail (cdr trees)])
           (when (> head-height tallest)
             (set-tree-visible! head #t))
-          (loop tail head (max head-height tallest))))))
+          (unless (= head-height 9)
+            (loop tail head (max head-height tallest)))))))
   (for ([x (range 0 (grid-w grid))])
-    (mark-visible! (grid-column grid x) 'up)
-    (mark-visible! (reverse (grid-column grid x)) 'down))
+    (mark-visible! (grid-column grid x))
+    (mark-visible! (reverse (grid-column grid x))))
   (for ([y (range 0 (grid-h grid))])
-    (mark-visible! (grid-row grid y) 'left)
-    (mark-visible! (reverse (grid-row grid y)) 'right)))
+    (mark-visible! (grid-row grid y))
+    (mark-visible! (reverse (grid-row grid y)))))
 
 ;; Compute directional scenic scores for each tree.
 (define (update-scores! grid)
