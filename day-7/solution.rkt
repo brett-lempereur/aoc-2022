@@ -1,11 +1,9 @@
 #lang racket/base
 
-(require racket/function)
 (require racket/generator)
 (require racket/list)
 (require racket/match)
 (require racket/sequence)
-(require racket/stream)
 
 ;; Data structures
 (struct node (name size))
