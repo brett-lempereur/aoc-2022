@@ -1,7 +1,6 @@
 #lang racket/base
 
 (require racket/generator)
-(require racket/list)
 (require racket/match)
 (require racket/set)
 (require racket/stream)
