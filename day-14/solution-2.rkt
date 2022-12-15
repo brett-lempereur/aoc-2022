@@ -93,6 +93,5 @@
 (define input-cave (read-input "data/input.txt"))
 (define example-cave (read-input "data/example.txt"))
 
-;; Solution one.
 (printf "Solution one: ~a\n" (count-sand (add-sand-until-filled input-cave (point 500 0))))
 (printf "Solution two: ~a\n" (count-sand (add-sand-until-filled input-cave (point 500 0) #t)))
